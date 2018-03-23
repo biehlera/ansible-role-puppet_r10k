@@ -1,0 +1,68 @@
+#!/bin/bash
+
+mkdir /tmp/tempdir && cd /tmp/tempdir
+[[ -d /root/.ssh/ ]] || mkdir /root/.ssh && chmod 700 /root/.ssh
+cp {{ r10k_homedir }}/{{ r10k_user }}/.ssh/{{ ssh_secret_key }} /root/.ssh && chmod 600 /root/.ssh/{{ ssh_secret_key }}
+
+cat << EOF >> {{ r10k_homedir }}/{{ r10k_user }}/.ssh/config
+Host r10k_server
+  User {{ r10k_user }}
+  Hostname {{ r10k_ip }}
+  Port 22
+  IdentityFile {{ r10k_homedir }}/{{ r10k_user }}/.ssh/{{ ssh_secret_key }}
+EOF
+
+cat << EOF >> /root/.ssh/config
+Host gitolite
+  User {{ r10k_user }}
+  Hostname {{ gitolite_ip }}
+  Port 22
+  IdentityFile /root/.ssh/{{ ssh_secret_key }}
+EOF
+
+git clone gitolite:gitolite-admin
+
+printf "\n" >> gitolite-admin/conf/gitolite.conf
+printf "repo puppet\n" >> gitolite-admin/conf/gitolite.conf
+printf "    RW+     =   git\n" >> gitolite-admin/conf/gitolite.conf
+
+cp {{ r10k_homedir }}/{{ r10k_user }}/.ssh/{{ ssh_secret_key }}.pub gitolite-admin/keydir/
+
+cd gitolite-admin
+git add .
+git commit -m "adds puppet repo"
+git push
+
+cat << EOF >> {{ r10k_homedir }}/{{ r10k_user }}/repositories/puppet.git/hooks/post-receive
+#!/bin/bash
+#
+# https://github.com/sciurus/r10k-git-hook
+
+umask 0022
+
+while read oldrev newrev refname; do
+    if [[ \$refname =~ 'refs/heads/' ]]; then
+        branch=\$(git rev-parse --symbolic --abbrev-ref \$refname)
+        files=\$(git diff-tree -r --name-only --no-commit-id \${oldrev}..\${newrev})
+        if [[ \$files =~ 'Puppetfile' ]]; then
+            echo "r10k updating \$branch environment and modules"
+            ssh r10k_server -o "StrictHostKeyChecking no" '/usr/local/bin/r10k deploy environment \$branch -p'
+        else
+            echo "r10k updating \$branch environment"
+            ssh r10k_server -o "StrictHostKeyChecking no" '/usr/local/bin/r10k deploy environment \$branch'
+        fi
+    else
+        echo "r10k skipping \$refname"
+    fi
+done
+EOF
+
+chown {{ r10k_user }}:{{ r10k_user }} {{ r10k_homedir }}/{{ r10k_user }}/repositories/puppet.git/hooks/post-receive
+chmod 700 {{ r10k_homedir }}/{{ r10k_user }}/repositories/puppet.git/hooks/post-receive 
+chown {{ r10k_user }}:{{ r10k_user }} {{ r10k_homedir }}/{{ r10k_user }}/.ssh/config
+chmod 600 {{ r10k_homedir }}/{{ r10k_user }}/.ssh/config
+
+rm -rf /tmp/tempdir
+
+
+

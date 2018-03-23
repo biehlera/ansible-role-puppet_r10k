@@ -1,0 +1,7 @@
+---
+:cachedir: /var/cache/r10k
+:sources:
+ puppet:
+   basedir: "{{ puppet_env_dir }}"
+   prefix: false
+   remote: 'ssh://gitolite/puppet'

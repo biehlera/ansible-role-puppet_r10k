@@ -1,0 +1,30 @@
+%RC = (
+  UMASK            =>  0077,
+  GIT_CONFIG_KEYS  =>  '',
+  LOG_EXTRA        =>  1,
+
+  ROLES => {
+    READERS =>  1,
+    WRITERS =>  1,
+  },
+
+  ENABLE => [
+    'help',
+    'desc',
+    'info',
+    'perms',
+    'writable',
+    'ssh-authkeys',
+    'git-annex-shell ua',
+    'repo-specific-hooks'
+  ],
+
+  LOCAL_CODE => "$rc{GL_ADMIN_BASE}/local"
+);
+
+1;
+
+# Local variables:
+# mode: perl
+# End:
+# vim: set syn=perl:

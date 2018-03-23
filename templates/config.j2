@@ -1,0 +1,6 @@
+Host gitolite
+  User "{{ r10k_user }}"
+  Hostname "{{ gitolite_ip }}"
+  Port 22
+  IdentityFile "{{ r10k_homedir }}/{{ r10k_user }}/.ssh/{{ ssh_secret_key }}"
+
