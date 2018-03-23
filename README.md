@@ -3,11 +3,12 @@ This Ansible role is my attempt to automate the deployment of [r10k](https://git
 Please note, that this code has been tested in a lab environment only!
 
 ## What the role does
-Markup:	* Installs and configures r10k on the Puppet Server
-	* Installs and configures Gitolite on the server hosting the control repo
-	* Adds a system user on both servers to be used in r10k code management operations
-	* Sets up permissions and ssh key authentication
-	* Deploys a bash script for finishing the setup and adding the control repo
+
+* Installs and configures r10k on the Puppet Server
+* Installs and configures Gitolite on the server hosting the control repo
+* Adds a system user on both servers to be used in r10k code management operations
+* Sets up permissions and ssh key authentication
+* Deploys a bash script for finishing the setup and adding the control repo
 
 ## Sample configuration
 
