@@ -10,11 +10,16 @@ Please note, that this code has been tested in a lab environment only!
 * Sets up permissions and ssh key authentication
 * Deploys a bash script for finishing the setup and adding the control repo
 
-## Sample configuration
+## Example
 
 Configuring r10k on a node puppetserver and the control repo on a node controlreposerver.
 
-Write a playbook:
+1. Create SSH keys:
+```
+ssh-keygen -f ~/.ssh/git -N ''
+```
+
+2. Write a playbook:
 
 ```
 ---
@@ -27,7 +32,7 @@ Write a playbook:
       name: ansible-puppetr10k
 ```
 
-Set up the vars:
+3. Set up the vars:
 
 ```
 r10k_server: puppetserver
@@ -36,16 +41,18 @@ r10k_ip: 18.195.177.126
 gitolite_ip: 18.195.26.8
 ```
 
-Additional steps after applying the playbook:
+Additional steps after applying the playbook.
 
-Connect to the Puppet Server via SSH and login as the user created (git by default). Then initiate an SSH connection to the Gitolite Server in order to get the fingerprint added to the known_hosts.
+1. Connect to the Puppet Server via SSH. 
+
+2. Login as the user created (git by default). Then initiate an SSH connection to the Gitolite Server in order to get the fingerprint added to the known_hosts.
 
 ```
 su - git
 ssh -T gitolite
 ```
 
-Connect to the Gitolite Server and as root run the setup_r10k script that gets deployed when applying the role.
+3. Connect to the Gitolite Server and as root run the setup_r10k script that gets deployed when applying the role.
 
 ```
 sudo -s
