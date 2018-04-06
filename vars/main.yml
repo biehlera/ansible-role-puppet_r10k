@@ -2,9 +2,3 @@ r10k_server:
 gitolite_server: 
 r10k_ip: 
 gitolite_ip: 
-puppet_env_dir: /etc/puppetlabs/code/environments
-r10k_user: git
-r10k_homedir: /var/lib
-ssh_secret_key: git
-ssh_key_src_path: ~/.ssh
-ssh_key_dest: "{{ r10k_homedir }}/{{ r10k_user }}/.ssh"
