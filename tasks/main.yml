@@ -27,6 +27,11 @@
     name: ruby
     update_cache: yes
   when: ( ansible_hostname == r10k_server )
+- name: Install Git
+  apt:
+    name: git
+    update_cache: yes
+  when: ( ansible_hostname == r10k_server )
 - name: Install r10k
   command: gem install r10k
   args:
