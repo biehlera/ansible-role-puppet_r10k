@@ -1,7 +1,7 @@
 ---
 puppet_env_dir: /etc/puppetlabs/code/environments
-r10k_user: git
-r10k_homedir: /var/lib
-ssh_secret_key: git
+r10k_user: puppet
+r10k_homedir: /opt/puppetlabs/server/data/puppetserver/
+ssh_secret_key: id.rsa
 ssh_key_src_path: ~/.ssh
 ssh_key_dest: "{{ r10k_homedir }}/{{ r10k_user }}/.ssh"

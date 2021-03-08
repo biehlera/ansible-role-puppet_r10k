@@ -1,6 +1,9 @@
-Host gitolite
-  User "{{ r10k_user }}"
-  Hostname "{{ gitolite_ip }}"
-  Port 22
-  IdentityFile "{{ r10k_homedir }}/{{ r10k_user }}/.ssh/{{ ssh_secret_key }}"
+host github.com
+ HostName github.com
+ IdentityFile /etc/puppetlabs/puppetserver/ssh/id.rsa
+ User git
 
+host saplogo
+ HostName github.com
+ IdentityFile /etc/puppetlabs/puppetserver/ssh/id-module-saplog.rsa
+ User git

@@ -1,81 +1,88 @@
 ---
-- name: Add user
-  user:
-      name: "{{ r10k_user }}"
-      password: '*'
-      home: "{{ r10k_homedir }}/{{ r10k_user }}"
-      createhome: yes
-      shell: /bin/sh
-      comment: "{{ r10k_user }}"
-      system: yes
-  when: ( ansible_hostname == r10k_server )
-- name: Create ssh folder
-  file:
-    state: directory
-    path: "{{ r10k_homedir }}/{{ r10k_user }}/.ssh"
-    mode: 0700
-  when: ( ansible_hostname == r10k_server )
-- name: Copy ssh key 
-  copy: 
-    src: "{{ ssh_key_src_path }}/{{ ssh_secret_key }}"    
-    dest: "{{ ssh_key_dest }}/{{ ssh_secret_key }}"    
-    mode: 0600
-    owner: "{{ r10k_user }}"
-  when: ( ansible_hostname == r10k_server )
 - name: Install Ruby
   apt:
     name: ruby
     update_cache: yes
-  when: ( ansible_hostname == r10k_server )
+
 - name: Install Git
   apt:
     name: git
     update_cache: yes
-  when: ( ansible_hostname == r10k_server )
+
 - name: Install r10k
   command: gem install r10k
   args:
     creates: /usr/local/bin/r10k
-  when: ( ansible_hostname == r10k_server )
+
 - name: Create r10k folder
   file:
     path: /etc/puppetlabs/r10k
     state: directory
     owner: "{{ r10k_user }}"
-  when: ( ansible_hostname == r10k_server )
+
 - name: Copy r10k.yaml
   template: 
     src: r10k.j2
     dest: /etc/puppetlabs/r10k/r10k.yaml
     owner: "{{ r10k_user }}"
-  when: ( ansible_hostname == r10k_server )
+
+- name: Set up Puppet environments folder permissions
+  file:
+    state: directory
+    path: "{{ r10k_homedir }}"
+    owner: "{{ r10k_user }}"
+    recurse: yes
+
+- name: create .ssh folder
+  file:
+    path: "{{ r10k_homedir }}/.ssh"
+    state: directory
+    owner: "{{ r10k_user }}"
+    group: "{{ r10k_user }}"
+    mode: 0700
+
 - name: Copy ssh config file
   template: 
     src: config.j2
-    dest: "{{ r10k_homedir }}/{{ r10k_user }}/.ssh/config"
+    dest: "{{ r10k_homedir }}/.ssh/config"
     mode: 0600
     owner: "{{ r10k_user }}"
-  when: ( ansible_hostname == r10k_server )
-- name: Set up ssh authorized_keys
-  authorized_key:
-    user: "{{ r10k_user }}"
-    state: present
-    key: "{{ lookup('file', '{{ ssh_key_src_path }}/{{ ssh_secret_key }}.pub') }}"
-    key_options: 'from="{{ gitolite_ip }}"'
-  when: ( ansible_hostname == r10k_server )
+
 - name: Set up Puppet environments folder permissions
   file:
     state: directory
     path: "{{ puppet_env_dir }}"
     owner: "{{ r10k_user }}"
     recurse: yes
-  when: ( ansible_hostname == r10k_server )
+
+- name: Set up Puppet environments folder permissions
+  file:
+    state: directory
+    path: '/etc/puppetlabs/puppetserver/'
+    recurse: yes
+    owner: "{{ r10k_user }}"
+
 - name: Set up r10k cache folder
   file:
     state: directory
     path: /var/cache/r10k 
     owner: "{{ r10k_user }}"
     group: "{{ r10k_user }}"
-  when: ( ansible_hostname == r10k_server )
-- name: Set up Gitolite
-  include_tasks: gitolite.yml
+
+- name: create puppet_deploy.sh script
+  blockinfile:
+    dest: "/tmp/puppet_deploy.sh"
+    block: |
+      sudo -n -H -u puppet bash -c "r10k deploy environment $1 --verbose --puppetfile"
+    create: yes
+    mode: 0770
+
+- name: ensure github.com is a known host
+  lineinfile:
+    dest:  /opt/puppetlabs/server/data/puppetserver/.ssh/known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+    regexp: "^github\\.com"
+
+#todo: Cronjob alle 10min
